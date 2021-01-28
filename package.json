@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "run": "node dist/app.js"
+    "build-run": "tsc;node dist/app.js"
   },
   "author": "Mustafa Enes Batur",
   "license": "ISC",
