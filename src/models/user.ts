@@ -6,7 +6,6 @@ interface IUser extends mongoose.Document {
     email_verified: boolean,
     username: string,
     passwordHash: string,
-    accessToken: string,
     refreshToken: string
 }
 
@@ -28,9 +27,6 @@ const UserSchema = new mongoose.Schema({
     passwordHash: {
         type: String,
         required: true
-    },
-    accessToken: {
-        type: String
     },
     refreshToken: {
         type: String

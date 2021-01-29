@@ -1,10 +1,8 @@
-import { Request, Response, NextFunction } from "express"
-import User from "../models/user"
+import { Request, Response } from "express"
 import bcrypt from "bcrypt"
-import jwt from "jsonwebtoken"
-import crypto from "crypto"
 
-const TOKEN_DURATION = 15 * 60 * 1000;
+import * as token from "./token"
+import User from "../models/user"
 
 interface SignupRequestBody {
     email: string
@@ -12,7 +10,7 @@ interface SignupRequestBody {
     password: string
 }
 
-export const postSignup = async (req: Request<{}, {}, SignupRequestBody>, res: Response, next: NextFunction) => {
+export const postSignup = async (req: Request<{}, {}, SignupRequestBody>, res: Response) => {
     const body: SignupRequestBody = req.body;
     // Check if the email is unique
     let user = await User.findOne({ email: body.email }).exec();
@@ -40,7 +38,7 @@ interface LoginResponseBody {
     refreshToken: string
 }
 
-export const postLogin = async (req: Request, res: Response, next: NextFunction) => {
+export const postLogin = async (req: Request, res: Response) => {
     const body: LoginRequestBody = req.body;
     const user = await User.findOne({ username: body.username }).exec();
     if (!user) {
@@ -49,15 +47,9 @@ export const postLogin = async (req: Request, res: Response, next: NextFunction)
     if (!await bcrypt.compare(body.password, user.passwordHash)) {
         return res.status(400).send("Wrong password");
     }
-    
-    const payload = {
-        username: user.username,
-        expiration: Date.now() + TOKEN_DURATION
-    }
-    // Create the access and refresh tokens
-    const accessToken = jwt.sign(payload, "sabahci_kahvesi");
-    const refreshToken = crypto.randomBytes(64).toString("hex");
-    user.accessToken = accessToken;
+
+    const accessToken = token.generateAccessToken(body.username);
+    const refreshToken = token.generateRefreshToken();
     user.refreshToken = refreshToken;
     await user.save();
 
@@ -66,19 +58,29 @@ export const postLogin = async (req: Request, res: Response, next: NextFunction)
 }
 
 interface RefreshRequestBody {
+    accessToken: string,
     refreshToken: string
 }
 
-export const postRefresh = async (req: Request, res: Response, next: NextFunction) => {
-    const body: RefreshRequestBody = req.body;
-    const user = await User.findOne({ refreshToken: body.refreshToken }).exec();
-    if (!user) {
-        return res.status(400).send("Invalid refresh token");
-    }
-       
+interface RefreshResponseBody {
+    newAccessToken: string,
+    newRefreshToken: string
 }
 
-function createNewTokens(username: string): {accessToken: string, refreshToken: string} {
-    
+export const postRefresh = async (req: Request, res: Response) => {
+    const body: RefreshRequestBody = req.body;
+    const sentAccessToken = token.verifyAccessToken(body.accessToken);
+    const user = await User.findOne({ username: sentAccessToken.username }).exec();
+    if (user.refreshToken != body.refreshToken) {
+        //TODO: Initiate the destruction protocol, refresh token is somehow invalid
+    }
+
+    const newAccessToken = token.generateAccessToken(user.username);
+    const newRefreshToken = token.generateRefreshToken();
+    user.refreshToken = newRefreshToken;
+    await user.save();
+
+    const responseJson: RefreshResponseBody = { newAccessToken, newRefreshToken };
+    res.status(200).json(responseJson);
 }
 
