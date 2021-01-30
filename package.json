@@ -7,16 +7,21 @@
     "build": "tsc",
     "build-run": "tsc;node dist/app.js"
   },
-  "author": "Mustafa Enes Batur",
+  "contributors": [
+    "Mustafa Enes Batur",
+    "Atalay Donat"
+  ],
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.0.0",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.11.13"
   },
   "devDependencies": {
     "@types/bcrypt": "^3.0.0",
-    "@types/express": "^4.17.11"
+    "@types/express": "^4.17.11",
+    "@types/jsonwebtoken": "^8.5.0"
   }
 }

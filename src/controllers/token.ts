@@ -13,9 +13,10 @@ export function generateAccessToken(user: string): string {
     return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {expiresIn: constants.TOKEN_DURATION_IN_SECONDS});
 }
 
-export function verifyAccessToken(token: string): IToken {
+export function verifyAccessToken(token: string): string {
     //TODO: what happens when the token is invalid or expired ?
-    return <IToken> jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    const payload = <IToken> jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    return payload.username;
 }
 
 export function generateRefreshToken(): string {

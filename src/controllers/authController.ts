@@ -69,8 +69,8 @@ interface RefreshResponseBody {
 
 export const postRefresh = async (req: Request, res: Response) => {
     const body: RefreshRequestBody = req.body;
-    const sentAccessToken = token.verifyAccessToken(body.accessToken);
-    const user = await User.findOne({ username: sentAccessToken.username }).exec();
+    const tokenUsername = token.verifyAccessToken(body.accessToken);
+    const user = await User.findOne({ username: tokenUsername }).exec();
     if (user.refreshToken != body.refreshToken) {
         //TODO: Initiate the destruction protocol, refresh token is somehow invalid
     }
