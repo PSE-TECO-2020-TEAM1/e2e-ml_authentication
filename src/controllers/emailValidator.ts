@@ -10,7 +10,7 @@ export async function sendTokenToEmail(userId: ObjectId, email: string): Promise
     // TODO: send email with the token
 }
 
-export async function checkToken(userId: ObjectId, token: string): Promise<boolean> {
+export async function validateEmail(userId: ObjectId, token: string): Promise<boolean> {
     const result = await EmailToken.deleteOne({ userId: userId, token: token}).exec();
     if (!result.deletedCount) {
         return false;

@@ -1,7 +1,9 @@
+import { ObjectId } from "mongoose"
 import { Request, Response } from "express"
 import bcrypt from "bcrypt"
 
 import * as token from "./token"
+import * as emailValidator from "./emailValidator"
 import User from "../models/user"
 
 interface SignupRequestBody {
@@ -24,7 +26,9 @@ export const postSignup = async (req: Request<{}, {}, SignupRequestBody>, res: R
     }
     // Create new user
     const passwordHash = await bcrypt.hash(body.password, 10);
-    await User.create({ email: body.email, username: body.username, passwordHash: passwordHash });
+    const newUser = await User.create({ email: body.email, username: body.username, passwordHash: passwordHash });
+    // Send token to email
+    await emailValidator.sendTokenToEmail(newUser._id, body.email);
     res.sendStatus(200);
 }
 
@@ -48,7 +52,7 @@ export const postLogin = async (req: Request, res: Response) => {
         return res.status(400).send("Wrong password");
     }
 
-    const accessToken = token.generateAccessToken(body.username);
+    const accessToken = token.generateAccessToken(user._id);
     const refreshToken = token.generateRefreshToken();
     user.refreshToken = refreshToken;
     await user.save();
@@ -69,13 +73,21 @@ interface RefreshResponseBody {
 
 export const postRefresh = async (req: Request, res: Response) => {
     const body: RefreshRequestBody = req.body;
-    const tokenUsername = token.verifyAccessToken(body.accessToken);
-    const user = await User.findOne({ username: tokenUsername }).exec();
+    let userId;
+    try {
+        userId = token.verifyAccessToken(body.accessToken);
+    } catch (err) {
+        return res.status(400).send("Unauthorized refresh");
+    }
+    const user = await User.findById(userId).exec();
     if (user.refreshToken != body.refreshToken) {
         //TODO: Initiate the destruction protocol, refresh token is somehow invalid
+        user.refreshToken = undefined;
+        await user.save();
+        return res.status(400).send("Unauthorized refresh");
     }
 
-    const newAccessToken = token.generateAccessToken(user.username);
+    const newAccessToken = token.generateAccessToken(user._id);
     const newRefreshToken = token.generateRefreshToken();
     user.refreshToken = newRefreshToken;
     await user.save();
@@ -84,3 +96,18 @@ export const postRefresh = async (req: Request, res: Response) => {
     res.status(200).json(responseJson);
 }
 
+interface PostValidateEmailRequestBody {
+    // TODO: userId actually is encoded in access token
+    userId: ObjectId
+    token: string
+}
+
+export const postValidateEmail = async (req: Request, res: Response) => {
+    const body: PostValidateEmailRequestBody = req.body;
+    // TODO: get userId from access token
+    if (!await emailValidator.validateEmail(body.userId, body.token)) {
+        return res.status(400).send("Wrong token");
+    }
+
+    res.sendStatus(200);
+}

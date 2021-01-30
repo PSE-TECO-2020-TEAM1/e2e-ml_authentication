@@ -19,6 +19,9 @@ app.use(express.json());
 
 app.post("/signup", controller.postSignup);
 app.post("/login", controller.postLogin);
+app.post("/refresh", controller.postRefresh);
+
+app.post("/validateEmail", controller.postValidateEmail);
 
 app.listen(process.env.PORT, () => {
     console.log("Server started")

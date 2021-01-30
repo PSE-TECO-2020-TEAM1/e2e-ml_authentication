@@ -1,22 +1,23 @@
+import { ObjectId } from "mongoose"
 import jwt from "jsonwebtoken"
 import crypto from "crypto"
 import constants from "../config/constants.json"
 
 interface IToken {
-    username: string,
+    userId: ObjectId,
 }
 
-export function generateAccessToken(user: string): string {
+export function generateAccessToken(userId: ObjectId): string {
     const payload: IToken = {
-        username: user,
+        userId: userId,
     } 
     return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {expiresIn: constants.TOKEN_DURATION_IN_SECONDS});
 }
 
-export function verifyAccessToken(token: string): string {
+export function verifyAccessToken(token: string): ObjectId {
     //TODO: what happens when the token is invalid or expired ?
     const payload = <IToken> jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-    return payload.username;
+    return payload.userId;
 }
 
 export function generateRefreshToken(): string {
