@@ -39,5 +39,4 @@ UserSchema.methods.isValidPassword = async function (this: IUser, password: stri
     return compare;
 }
 
-const User = mongoose.model<IUser>("User", UserSchema);
-export default User
+export default mongoose.model<IUser>("User", UserSchema);

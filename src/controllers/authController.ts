@@ -1,11 +1,13 @@
 import { Request, Response } from "express"
 import bcrypt from "bcrypt"
 import crypto from "crypto"
+import { ObjectId } from "mongoose"
 
 import * as token from "./token"
 import User from "../models/user"
-import EmailToken from "../models/emailToken"
+import { EmailVerificationToken } from "../models/emailToken"
 import constants from "../config/constants.json"
+import * as email from "./email"
 
 interface SignupRequestBody {
     email: string
@@ -28,11 +30,11 @@ export const postSignup = async (req: Request, res: Response) => {
     // Create new user
     const passwordHash = await bcrypt.hash(body.password, 10);
     const newUser = await User.create({ email: body.email, username: body.username, passwordHash: passwordHash });
-    // Create email validation token
-    const emailToken = crypto.randomBytes(constants.EMAIL_TOKEN_SIZE_IN_BYTES).toString("hex");
-    await EmailToken.create({ userId: newUser._id, token: emailToken});
-    //TODO: Send token to email
-    
+    // Send email validation token
+    const verificationToken = crypto.randomBytes(constants.EMAIL_TOKEN_SIZE_IN_BYTES).toString("hex");
+    await EmailVerificationToken.create({ userId: newUser._id, token: verificationToken});
+    await email.sendVerificationEmail(body.email, verificationToken)
+
     res.sendStatus(200);
 }
 
@@ -66,7 +68,7 @@ export const postLogin = async (req: Request, res: Response) => {
 }
 
 interface RefreshRequestBody {
-    accessToken: string,
+    userId: ObjectId,
     refreshToken: string
 }
 
@@ -77,25 +79,65 @@ interface RefreshResponseBody {
 
 export const postRefresh = async (req: Request, res: Response) => {
     const body: RefreshRequestBody = req.body;
-    let userId;
-    try {
-        userId = token.verifyAccessToken(body.accessToken);
-    } catch (err) {
-        return res.status(400).send("Unauthorized refresh");
-    }
 
-    const user = await User.findById(userId).exec();
+    const user = await User.findById(body.userId).exec();
     if (user.refreshToken != body.refreshToken) {
         user.refreshToken = undefined;
         await user.save();
-        return res.status(400).send("Unauthorized refresh");
+        return res.sendStatus(401);
     }
 
-    const newAccessToken = token.generateAccessToken(user._id);
+    const newAccessToken = token.generateAccessToken(body.userId);
     const newRefreshToken = token.generateRefreshToken();
     user.refreshToken = newRefreshToken;
     await user.save();
 
     const responseJson: RefreshResponseBody = { newAccessToken, newRefreshToken };
     res.status(200).json(responseJson);
+}
+
+interface PostVerifyEmailRequestQuery extends qs.ParsedQs {
+    token: string
+}
+
+export const postVerifyEmail = async (req: Request<{}, {}, {}, PostVerifyEmailRequestQuery>, res: Response) => {
+    const query = req.query;
+    // TODO: get userId from access token
+    const verificationToken = await EmailVerificationToken.findOneAndDelete({ token: query.token }).exec();
+    if (!verificationToken) {
+        return res.status(400).send("Invalid email validation token");
+    }
+
+    await User.updateOne({userId: verificationToken.userId}, {email_verified: true}).exec();
+    res.sendStatus(200);
+}
+
+interface PostChangePasswordRequestBody {
+    userId: ObjectId
+    newPassword: string
+}
+
+export const postChangePassword = async (req: Request, res: Response) => {
+    const body: PostChangePasswordRequestBody = req.body;
+    const passwordHash = await bcrypt.hash(body.newPassword, 10);
+    User.updateOne({"_id": body.userId}, {"passwordHash": passwordHash});
+    res.sendStatus(200);
+}
+
+interface PostResetPasswordRequestBody {
+    email: string
+}
+
+export const PostResetPassword = async (req: Request, res: Response) => {
+    const body: PostResetPasswordRequestBody = req.body;
+    const user = await User.findOne({"email": body.email}).exec();
+    if (!user) {
+        return res.status(400).send("There is no user with the given email");
+    }
+
+    const newPassword = crypto.randomBytes(constants.DEFAULT_PASSWORD_SIZE_IN_BYTES).toString("hex");
+    const newPasswordHash = await bcrypt.hash(newPassword, 10);
+    user.passwordHash = newPasswordHash;
+    user.save();
+    res.sendStatus(200);
 }

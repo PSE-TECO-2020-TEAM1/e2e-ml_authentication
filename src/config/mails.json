@@ -1,7 +1,15 @@
 {
-    "from": "teco?",
+    "from": "TODO",
 
-    "verification": {
-        "subject": "Verify your email"
+    "verifyEmail": {
+        "url": "TODO",
+        "subject": "Verify your email for your account",
+        "html": "<b>Your verification link: </b>"
+    },
+
+    "resetPassword": {
+        "url": "TODO",
+        "subject": "Reset your password",
+        "html": "<b>Your password </b>"
     }
 }

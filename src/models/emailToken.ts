@@ -17,5 +17,5 @@ const EmailTokenSchema = new mongoose.Schema({
     }
 })
 
-const EmailToken = mongoose.model<IEmailToken>("EmailToken", EmailTokenSchema);
-export default EmailToken
+export const EmailVerificationToken = mongoose.model<IEmailToken>("EmailVerificationToken", EmailTokenSchema);
+export const ResetPasswordToken = mongoose.model<IEmailToken>("ResetPasswordToken", EmailTokenSchema);
