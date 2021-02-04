@@ -1,7 +1,7 @@
 import { Request, Response } from "express"
 import bcrypt from "bcrypt"
 import crypto from "crypto"
-import { ObjectId } from "mongoose"
+import { body, ValidationChain } from "express-validator/check"
 
 import * as token from "./token"
 import User from "../models/user"
@@ -9,11 +9,28 @@ import { EmailVerificationToken } from "../models/emailToken"
 import constants from "../config/constants.json"
 import * as email from "./email"
 
+interface RequestValidator {
+    postSignup: Array<ValidationChain>,
+    postLogin: Array<ValidationChain>,
+    postRefresh: Array<ValidationChain>,
+    postVerifyEmail: Array<ValidationChain>,
+    postChangePassword: Array<ValidationChain>,
+    postResetPassword:Array<ValidationChain> 
+}
+
+export let validate: RequestValidator
+
+
 interface SignupRequestBody {
     email: string
     username: string
     password: string
 }
+validate.postSignup = [
+    body("email", "Invalid email").exists().isEmail(),
+    body("username").exists().isString(),
+    body("password").exists().isString()
+]
 
 export const postSignup = async (req: Request, res: Response) => {
     const body: SignupRequestBody = req.body;
@@ -42,6 +59,10 @@ interface LoginRequestBody {
     username: string
     password: string
 }
+validate.postLogin = [
+    body("username").exists().isString(),
+    body("password").exists().isString()
+]
 
 interface LoginResponseBody {
     accessToken: string,
@@ -68,9 +89,13 @@ export const postLogin = async (req: Request, res: Response) => {
 }
 
 interface RefreshRequestBody {
-    userId: ObjectId,
+    userId: string,
     refreshToken: string
 }
+validate.postRefresh = [
+    body("userId").exists().isString(),
+    body("refreshToken").exists().isString()
+]
 
 interface RefreshResponseBody {
     newAccessToken: string,
@@ -113,7 +138,7 @@ export const postVerifyEmail = async (req: Request<{}, {}, {}, PostVerifyEmailRe
 }
 
 interface PostChangePasswordRequestBody {
-    userId: ObjectId
+    userId: string
     newPassword: string
 }
 

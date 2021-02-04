@@ -7,7 +7,7 @@ export default async (req: Request, res: Response, next: NextFunction) => {
         const accessToken = req.headers.authorization.split(' ')[1];
         userId = token.verifyAccessToken(accessToken);
     } catch {
-        res.sendStatus(401);
+        return res.sendStatus(401);
     }
 
     req.body.userId = userId;
