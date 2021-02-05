@@ -3,7 +3,7 @@ import bcrypt from "bcrypt"
 import crypto from "crypto"
 import { body, ValidationChain } from "express-validator/check"
 
-import * as token from "./token"
+import * as auth from "./auth"
 import User from "../models/user"
 import { EmailVerificationToken } from "../models/emailToken"
 import constants from "../config/constants.json"
@@ -79,8 +79,8 @@ export const postLogin = async (req: Request, res: Response) => {
         return res.status(400).send("Wrong password");
     }
 
-    const accessToken = token.generateAccessToken(user._id);
-    const refreshToken = token.generateRefreshToken();
+    const accessToken = auth.generateAccessToken(user._id);
+    const refreshToken = auth.generateRefreshToken();
     user.refreshToken = refreshToken;
     await user.save();
 
@@ -112,8 +112,8 @@ export const postRefresh = async (req: Request, res: Response) => {
         return res.sendStatus(401);
     }
 
-    const newAccessToken = token.generateAccessToken(body.userId);
-    const newRefreshToken = token.generateRefreshToken();
+    const newAccessToken = auth.generateAccessToken(body.userId);
+    const newRefreshToken = auth.generateRefreshToken();
     user.refreshToken = newRefreshToken;
     await user.save();
 
