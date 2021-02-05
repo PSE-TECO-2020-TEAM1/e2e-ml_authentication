@@ -2,6 +2,7 @@ import express from "express"
 import dotenv from "dotenv"
 import mongoose from "mongoose"
 
+import Router from "./routers/authRouters"
 // Load the environment variables
 dotenv.config();
 
@@ -15,6 +16,8 @@ mongoose.connection.once('open', function() {
 const app = express();
 
 app.use(express.json());
+
+app.use(Router);
 
 app.listen(process.env.PORT, () => {
     console.log("Server started");

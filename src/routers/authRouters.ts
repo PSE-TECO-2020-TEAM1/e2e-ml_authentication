@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction, Router } from "express"
 
 import * as controller from "../controllers/authController"
-import auth from "../controllers/auth"
+import { Authenticate } from "../controllers/auth"
 import { validationResult } from "express-validator"
 
-export let router = Router()
+let router = Router();
 
 const validated = (req: Request, res: Response, next: NextFunction) => {
     const errors = validationResult(req);
@@ -18,5 +18,7 @@ router.post("/signup", controller.validate.postSignup, validated, controller.pos
 router.post("/login", controller.validate.postLogin, validated, controller.postLogin);
 router.post("/verifyEmail", controller.validate.postLogin, validated, controller.postVerifyEmail);
 router.post("/resetPassword", controller.validate.postLogin, validated, controller.PostResetPassword);
-router.post("/refresh", auth, controller.validate.postLogin, validated, controller.postRefresh);
-router.post("/changePassword", auth, controller.validate.postLogin, validated, controller.postChangePassword);
+router.post("/refresh", Authenticate, controller.validate.postLogin, validated, controller.postRefresh);
+router.post("/changePassword", Authenticate, controller.validate.postLogin, validated, controller.postChangePassword);
+
+export default router;

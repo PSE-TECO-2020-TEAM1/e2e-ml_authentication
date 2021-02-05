@@ -27,7 +27,7 @@ interface SignupRequestBody {
     password: string
 }
 validate.postSignup = [
-    body("email", "Invalid email").exists().isEmail(),
+    body("email").exists().isEmail(),
     body("username").exists().isString(),
     body("password").exists().isString()
 ]
@@ -145,7 +145,7 @@ interface PostChangePasswordRequestBody {
 export const postChangePassword = async (req: Request, res: Response) => {
     const body: PostChangePasswordRequestBody = req.body;
     const passwordHash = await bcrypt.hash(body.newPassword, 10);
-    User.updateOne({"_id": body.userId}, {"passwordHash": passwordHash});
+    await User.updateOne({"_id": body.userId}, {"passwordHash": passwordHash}).exec();
     res.sendStatus(200);
 }
 
@@ -163,6 +163,6 @@ export const PostResetPassword = async (req: Request, res: Response) => {
     const newPassword = crypto.randomBytes(constants.DEFAULT_PASSWORD_SIZE_IN_BYTES).toString("hex");
     const newPasswordHash = await bcrypt.hash(newPassword, 10);
     user.passwordHash = newPasswordHash;
-    user.save();
+    await user.save();
     res.sendStatus(200);
 }
