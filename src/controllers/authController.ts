@@ -15,7 +15,7 @@ interface RequestValidator {
     postRefresh: Array<ValidationChain>,
     postVerifyEmail: Array<ValidationChain>,
     postChangePassword: Array<ValidationChain>,
-    postResetPassword:Array<ValidationChain> 
+    postResetPassword: Array<ValidationChain> 
 }
 
 export let validate: RequestValidator
