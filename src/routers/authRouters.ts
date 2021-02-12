@@ -16,9 +16,9 @@ const validated = (req: Request, res: Response, next: NextFunction) => {
 
 router.post("/signup", controller.validate.postSignup, validated, controller.postSignup);
 router.post("/login", controller.validate.postLogin, validated, controller.postLogin);
-router.post("/verifyEmail", controller.validate.postLogin, validated, controller.postVerifyEmail);
-router.post("/resetPassword", controller.validate.postLogin, validated, controller.PostResetPassword);
-router.post("/refresh", Authenticate, controller.validate.postLogin, validated, controller.postRefresh);
-router.post("/changePassword", Authenticate, controller.validate.postLogin, validated, controller.postChangePassword);
+router.post("/verifyEmail", controller.validate.postVerifyEmail, validated, controller.postVerifyEmail);
+router.post("/resetPassword", controller.validate.postResetPassword, validated, controller.PostResetPassword);
+router.post("/refresh", Authenticate, controller.validate.postRefresh, validated, controller.postRefresh);
+router.post("/changePassword", Authenticate, controller.validate.postChangePassword, validated, controller.postChangePassword);
 
 export default router;

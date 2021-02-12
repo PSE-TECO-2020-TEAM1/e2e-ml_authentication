@@ -1,7 +1,7 @@
 import { Request, Response } from "express"
 import bcrypt from "bcrypt"
 import crypto from "crypto"
-import { body, ValidationChain } from "express-validator/check"
+import { body, query, ValidationChain } from "express-validator/check"
 
 import * as auth from "./auth"
 import User from "../models/user"
@@ -124,6 +124,9 @@ export const postRefresh = async (req: Request, res: Response) => {
 interface PostVerifyEmailRequestQuery extends qs.ParsedQs {
     token: string
 }
+validate.postVerifyEmail = [
+    query("token").exists().isString()
+]
 
 export const postVerifyEmail = async (req: Request<{}, {}, {}, PostVerifyEmailRequestQuery>, res: Response) => {
     const query = req.query;
@@ -141,6 +144,10 @@ interface PostChangePasswordRequestBody {
     userId: string
     newPassword: string
 }
+validate.postChangePassword = [
+    body("userId").exists().isString(),
+    body("newPassword").exists().isString()
+]
 
 export const postChangePassword = async (req: Request, res: Response) => {
     const body: PostChangePasswordRequestBody = req.body;
@@ -152,6 +159,9 @@ export const postChangePassword = async (req: Request, res: Response) => {
 interface PostResetPasswordRequestBody {
     email: string
 }
+validate.postResetPassword = [
+    body("email").exists().isEmail()
+]
 
 export const PostResetPassword = async (req: Request, res: Response) => {
     const body: PostResetPasswordRequestBody = req.body;
