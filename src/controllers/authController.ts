@@ -31,12 +31,12 @@ export let validate: RequestValidator = {
 interface SignupRequestBody {
     email: string
     username: string
-    password: string
+    passwordHash: string
 }
 validate.postSignup = [
     body("email").exists().isEmail(),
     body("username").exists().isString(),
-    body("password").exists().isString()
+    body("passwordHash").exists().isString()
 ]
 
 export const postSignup = async (req: Request, res: Response) => {
@@ -52,7 +52,7 @@ export const postSignup = async (req: Request, res: Response) => {
         return res.status(400).send("A user with the given username already exists");
     }
     // Create new user
-    const passwordHash = await bcrypt.hash(body.password, 10);
+    const passwordHash = await bcrypt.hash(body.passwordHash, 10);
     const newUser = await User.create({ email: body.email, username: body.username, passwordHash: passwordHash });
     // Send email validation token
     const verificationToken = crypto.randomBytes(constants.EMAIL_TOKEN_SIZE_IN_BYTES).toString("hex");
@@ -64,11 +64,11 @@ export const postSignup = async (req: Request, res: Response) => {
 
 interface LoginRequestBody {
     username: string
-    password: string
+    passwordHash: string
 }
 validate.postLogin = [
     body("username").exists().isString(),
-    body("password").exists().isString()
+    body("passwordHash").exists().isString()
 ]
 
 interface LoginResponseBody {
@@ -82,7 +82,7 @@ export const postLogin = async (req: Request, res: Response) => {
     if (!user) {
         return res.status(400).send("A user with the given username doesn't exist");
     }
-    if (!await bcrypt.compare(body.password, user.passwordHash)) {
+    if (!await bcrypt.compare(body.passwordHash, user.passwordHash)) {
         return res.status(400).send("Wrong password");
     }
 
