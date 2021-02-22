@@ -19,7 +19,7 @@ const app = express();
 
 app.use(express.json());
 
-app.use(Router);
+app.use("/auth", Router);
 
 app.listen(process.env.PORT, () => {
     console.log("Server started");
