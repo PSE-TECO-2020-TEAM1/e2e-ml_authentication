@@ -6,10 +6,12 @@ import Router from "./routers/authRouters"
 // Load the environment variables
 dotenv.config();
 
-mongoose.connect(`mongodb://${process.env.DATABASE_IP}:${process.env.DATABASE_PORT}/${process.env.DATABASE}`,
-        { useUnifiedTopology: true, useNewUrlParser: true, useCreateIndex: true });
-mongoose.connection.on('error', console.error.bind(console, 'Connection error:'));        
-mongoose.connection.once('open', function() {
+mongoose.connect(`mongodb+srv://${process.env.DATABASE_USER}:${process.env.DATABASE_PASS}@${process.env.DATABASE_IP}/${process.env.DATABASE}?retryWrites=true&w=majority`,
+    { useUnifiedTopology: true, useNewUrlParser: true, useCreateIndex: true }).catch(error => {
+        console.log("Database connection failed");
+    }
+    );
+mongoose.connection.once('open', function () {
     console.log("Database connection established");
 });
 

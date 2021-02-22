@@ -1,7 +1,7 @@
 import { Request, Response } from "express"
 import bcrypt from "bcrypt"
 import crypto from "crypto"
-import { body, query, ValidationChain } from "express-validator/check"
+import { body, query, ValidationChain } from "express-validator"
 
 import * as auth from "./auth"
 import User from "../models/user"
@@ -18,7 +18,14 @@ interface RequestValidator {
     postResetPassword: Array<ValidationChain> 
 }
 
-export let validate: RequestValidator
+export let validate: RequestValidator = {
+    postSignup: [],
+    postLogin: [],
+    postRefresh: [],
+    postVerifyEmail: [],
+    postChangePassword: [],
+    postResetPassword: []
+}
 
 
 interface SignupRequestBody {
