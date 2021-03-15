@@ -57,7 +57,7 @@ export const postSignup = async (req: Request, res: Response) => {
     // Send email validation token
     const verificationToken = crypto.randomBytes(constants.EMAIL_TOKEN_SIZE_IN_BYTES).toString("hex");
     await EmailVerificationToken.create({ userId: newUser._id, token: verificationToken});
-    await email.sendVerificationEmail(body.email, verificationToken)
+    // await email.sendVerificationEmail(body.email, verificationToken)
 
     res.sendStatus(200);
 }
