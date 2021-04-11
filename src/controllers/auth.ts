@@ -35,7 +35,7 @@ export async function Authenticate(req: Request, res: Response, next: NextFuncti
         const accessToken = req.headers.authorization.split(' ')[1];
         userId = verifyAccessToken(accessToken);
     } catch {
-        return res.sendStatus(401);
+        return res.status(401).json("Unauthorized");
     }
 
     req.body.userId = userId;

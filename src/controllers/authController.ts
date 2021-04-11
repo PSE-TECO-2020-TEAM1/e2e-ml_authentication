@@ -44,12 +44,12 @@ export const postSignup = async (req: Request, res: Response) => {
     // Check if the email is unique
     let user = await User.findOne({ email: body.email }).exec();
     if (user) {
-        return res.status(400).send("A user with the given email already exists");
+        return res.status(400).json("A user with the given email already exists");
     }
     // Check if the username is unique 
     user = await User.findOne({username: body.username }).exec();
     if (user) {
-        return res.status(400).send("A user with the given username already exists");
+        return res.status(400).json("A user with the given username already exists");
     }
     // Create new user
     const passwordHash = await bcrypt.hash(body.passwordHash, 10);
@@ -59,7 +59,7 @@ export const postSignup = async (req: Request, res: Response) => {
     await EmailVerificationToken.create({ userId: newUser._id, token: verificationToken});
     // await email.sendVerificationEmail(body.email, verificationToken)
 
-    res.sendStatus(200);
+    res.status(200).json();
 }
 
 interface LoginRequestBody {
@@ -80,10 +80,10 @@ export const postLogin = async (req: Request, res: Response) => {
     const body: LoginRequestBody = req.body;
     const user = await User.findOne({ username: body.username }).exec();
     if (!user) {
-        return res.status(400).send("A user with the given username doesn't exist");
+        return res.status(400).json("A user with the given username doesn't exist");
     }
     if (!await bcrypt.compare(body.passwordHash, user.passwordHash)) {
-        return res.status(400).send("Wrong password");
+        return res.status(400).json("Wrong password");
     }
 
     const accessToken = auth.generateAccessToken(user._id);
@@ -116,7 +116,7 @@ export const postRefresh = async (req: Request, res: Response) => {
     if (user.refreshToken != body.refreshToken) {
         user.refreshToken = undefined;
         await user.save();
-        return res.sendStatus(401);
+        return res.status(401).json("Unauthorized")
     }
 
     const newAccessToken = auth.generateAccessToken(body.userId);
@@ -140,11 +140,11 @@ export const postVerifyEmail = async (req: Request<{}, {}, {}, PostVerifyEmailRe
     // TODO: get userId from access token
     const verificationToken = await EmailVerificationToken.findOneAndDelete({ token: query.token }).exec();
     if (!verificationToken) {
-        return res.status(400).send("Invalid email validation token");
+        return res.status(400).json("Invalid email validation token");
     }
 
     await User.updateOne({userId: verificationToken.userId}, {email_verified: true}).exec();
-    res.sendStatus(200);
+    res.status(200).json("OK");
 }
 
 interface PostChangePasswordRequestBody {
@@ -160,7 +160,7 @@ export const postChangePassword = async (req: Request, res: Response) => {
     const body: PostChangePasswordRequestBody = req.body;
     const passwordHash = await bcrypt.hash(body.newPassword, 10);
     await User.updateOne({"_id": body.userId}, {"passwordHash": passwordHash}).exec();
-    res.sendStatus(200);
+    res.status(200).json("OK");
 }
 
 interface PostResetPasswordRequestBody {
@@ -174,12 +174,12 @@ export const PostResetPassword = async (req: Request, res: Response) => {
     const body: PostResetPasswordRequestBody = req.body;
     const user = await User.findOne({"email": body.email}).exec();
     if (!user) {
-        return res.status(400).send("There is no user with the given email");
+        return res.status(400).json("There is no user with the given email");
     }
 
     const newPassword = crypto.randomBytes(constants.DEFAULT_PASSWORD_SIZE_IN_BYTES).toString("hex");
     const newPasswordHash = await bcrypt.hash(newPassword, 10);
     user.passwordHash = newPasswordHash;
     await user.save();
-    res.sendStatus(200);
+    res.status(200).json("OK");
 }
