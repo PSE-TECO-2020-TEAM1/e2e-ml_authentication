@@ -59,7 +59,7 @@ export const postSignup = async (req: Request, res: Response) => {
     await EmailVerificationToken.create({ userId: newUser._id, token: verificationToken});
     // await email.sendVerificationEmail(body.email, verificationToken)
 
-    res.status(200).json();
+    res.status(200).json("OK");
 }
 
 interface LoginRequestBody {
